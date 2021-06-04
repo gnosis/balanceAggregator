@@ -16,7 +16,17 @@ interface IAdapter {
     )
         external
         returns(
-            int256
+            uint256
+        );
+}
+
+interface IERC20 {
+    function balanceOf(
+        address _owner
+    )
+        external
+        returns(
+            uint256 balance
         );
 }
 
@@ -26,7 +36,7 @@ contract BalanceAggregator is Ownable{
     event RemovedAdapter(address owner);
 
     uint256 public adapterCount;
-    address public token;
+    IERC20 public token;
 
     address internal constant SENTINEL_ADAPTERS = address(0x1);
 
@@ -38,7 +48,7 @@ contract BalanceAggregator is Ownable{
         address _token,
         address[] memory _adapters
     ){
-        token = _token;
+        token = IERC20(_token);
         setupAdapters(_adapters);
     }
 
@@ -54,7 +64,7 @@ contract BalanceAggregator is Ownable{
         for (uint256 i = 0; i < _adapters.length; i++) {
             address adapter = _adapters[i];
             require(adapter != address(0) && adapter != SENTINEL_ADAPTERS && adapter != address(this) && currentAdapter != adapter, "Adapter address cannot be null, the sentinel, or this contract.");
-            require(adapters[adapter] == address(0), " No duplicate adapters allowed");
+            require(adapters[adapter] == address(0), " No duplicate adapters allowed.");
             adapters[currentAdapter] = adapter;
             currentAdapter = adapter;
         }
@@ -99,31 +109,6 @@ contract BalanceAggregator is Ownable{
         emit RemovedAdapter(adapter);
     }
 
-    /// @dev Allows to swap/replace an adapter.
-    /// @notice Replaces the adapter `oldAdapter` with `newAdapter`.
-    /// @param prevAdapter Adapter that pointed to the adapter to be replaced in the linked list
-    /// @param oldAdapter Adapter address to be replaced.
-    /// @param newAdapter New adapter address.
-    function swapAdapter(
-        address prevAdapter,
-        address oldAdapter,
-        address newAdapter
-    )
-        public
-        onlyOwner
-    {
-        require(newAdapter != address(0) && newAdapter != SENTINEL_ADAPTERS && newAdapter != address(this), "Adapter address cannot be null, the sentinel, or this contract.");
-        require(adapters[newAdapter] == address(0), "No duplicate adapters allowed.");
-        // Validate oldAdapter address and check that it corresponds to adapter index.
-        require(oldAdapter != address(0) && oldAdapter != SENTINEL_ADAPTERS, "Adapter address cannot be null or the sentinel.");
-        require(adapters[prevAdapter] == oldAdapter, "prevAdapter does not point to adapter.");
-        adapters[newAdapter] = adapters[oldAdapter];
-        adapters[prevAdapter] = newAdapter;
-        adapters[oldAdapter] = address(0);
-        emit RemovedAdapter(oldAdapter);
-        emit AddedAdapter(newAdapter);
-    }
-
     /// @dev Returns array of adapters.
     /// @return Array of adapters.
     function getAdapters()
@@ -144,5 +129,22 @@ contract BalanceAggregator is Ownable{
             index++;
         }
         return array;
+    }
+
+    function balanceOf(address _owner)
+        external
+        returns(
+            uint256 balance
+        )
+    {
+        address[] memory _adapters = getAdapters();
+        balance = token.balanceOf(_owner);
+
+        for (uint i = 0; i < _adapters.length; i++){
+            IAdapter adapter = IAdapter(_adapters[i]);
+            uint adapterBalance = adapter.getBalance(address(token), _owner);
+            balance = balance + adapterBalance;
+        }
+        return balance;
     }
 }
