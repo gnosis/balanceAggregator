@@ -15,6 +15,7 @@ interface IAdapter {
         address account
     )
         external
+        view
         returns(
             uint256
         );
@@ -25,6 +26,7 @@ interface IERC20 {
         address _owner
     )
         external
+        view
         returns(
             uint256 balance
         );
@@ -133,6 +135,7 @@ contract BalanceAggregator is Ownable{
 
     function balanceOf(address _owner)
         external
+        view
         returns(
             uint256 balance
         )
