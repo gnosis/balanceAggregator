@@ -149,11 +149,11 @@ describe("BalanceAggregator", async () => {
     })
 
     describe("balanceOf()", async () => {
-        it("returns the correct correct balance for user", async () => {
+        it("returns the correct correct balance", async () => {
             const { balanceAggregator, adapter2, token} = await setup();
             const expected = 9;
             await balanceAggregator.addAdapter(adapter2.address);
-            const balance = await balanceAggregator.balanceOf(ZEROADDRESS);
+            const balance = await balanceAggregator.balanceOf(user1.address);
             await expect(balance).to.be.equals(expected);
         })
     })

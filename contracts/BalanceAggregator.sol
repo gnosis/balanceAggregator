@@ -114,7 +114,7 @@ contract BalanceAggregator is Ownable{
     function getAdapters()
         public
         view
-        returns (
+        returns(
             address[] memory
         )
     {
@@ -138,13 +138,13 @@ contract BalanceAggregator is Ownable{
         )
     {
         address[] memory _adapters = getAdapters();
-        balance = token.balanceOf(_owner);
+        uint256 _balance = token.balanceOf(_owner);
 
         for (uint i = 0; i < _adapters.length; i++){
             IAdapter adapter = IAdapter(_adapters[i]);
             uint adapterBalance = adapter.getBalance(address(token), _owner);
-            balance = balance + adapterBalance;
+            _balance = _balance + adapterBalance;
         }
-        return balance;
+        return _balance;
     }
 }
