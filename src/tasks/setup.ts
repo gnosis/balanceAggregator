@@ -2,31 +2,29 @@ import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { task, types } from "hardhat/config";
 
-task("setup", "deploy a SafeBridge Module")
-    .addParam("dao", "Address of the DAO (e.g. Safe)", undefined, types.string)
-    .addParam("amb", "Address of the AMB", undefined, types.string)
-    .addParam("owner", "Address of the owner on the other side of the AMB", undefined, types.string)
-    .addParam("chainid", "Chain ID on the other side of the AMB", undefined, types.string)
+task("setup", "deploy a BalanceAggregator")
+    .addParam("token", "Address of the token balance to aggregate", undefined, types.string)
+    .addParam("adapters", "Addresses of the Zerion adapters to pull balances from", undefined, types.string)
     .setAction(async (taskArgs, hardhatRuntime) => {
         const [caller] = await hardhatRuntime.ethers.getSigners();
         console.log("Using the account:", caller.address);
-        const Module = await hardhatRuntime.ethers.getContractFactory("SafeBridgeModule");
-        const module = await Module.deploy(taskArgs.dao, taskArgs.amb, taskArgs.owner, taskArgs.chainid);
+        const adapters = JSON.parse(taskArgs.adapters);
+        const BalanceAggregator = await hardhatRuntime.ethers.getContractFactory("BalanceAggregator");
+        const balanceAggregator = await BalanceAggregator.deploy(taskArgs.token, adapters);
 
-        console.log("SafeBridge Module deployed to:", module.address);
+        console.log("BalanceAggregator deployed to:", balanceAggregator.address);
     });
 
 task("verifyEtherscan", "Verifies the contract on etherscan")
-    .addParam("module", "Address of the SafeBridge module", undefined, types.string)
-    .addParam("dao", "Address of the DAO (e.g. Safe)", undefined, types.string)
-    .addParam("amb", "Address of the AMB", undefined, types.string)
-    .addParam("owner", "Address of the ofwner on the other side of the AMB", undefined, types.string)
-    .addParam("chainid", "Chain ID on the other side of the AMB", undefined, types.string)
+    .addParam("contract", "Address of the balanceAggregator contract", undefined, types.string)
+    .addParam("token", "Address of the token balance to aggregate", undefined, types.string)
+    .addParam("adapters", "Addresses of the Zerion adapters to pull balances from", undefined, types.string)
     .setAction(async (taskArgs, hardhatRuntime) => {
+        const adapters = JSON.parse(taskArgs.adapters);
         await hardhatRuntime.run("verify", {
-            address: taskArgs.module,
+            address: taskArgs.contract,
             constructorArgsParams: [
-                taskArgs.dao, taskArgs.amb, taskArgs.owner, taskArgs.chainid
+                taskArgs.token, adapters
             ]
         })
     });
