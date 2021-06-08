@@ -15,18 +15,22 @@ describe("BalanceAggregator", async () => {
         const mock2 = await Mock.deploy();
         const adapter2 = await hre.ethers.getContractAt("IAdapter", mock2.address);
         const mock3 = await Mock.deploy();
-        const token = await hre.ethers.getContractAt("IERC20", mock3.address);
+        const adapter3 = await hre.ethers.getContractAt("IAdapter", mock3.address);
+        const mock4 = await Mock.deploy();
+        const token = await hre.ethers.getContractAt("IERC20", mock4.address);
+
 
         const signers = await hre.ethers.getSigners();
 
         await mock1.givenMethodReturnUint(adapter1.interface.getSighash("getBalance"), 1);
         await mock2.givenMethodReturnUint(adapter2.interface.getSighash("getBalance"), 3);
-        await mock3.givenMethodReturnUint(token.interface.getSighash("balanceOf"), 5);
+        await mock3.givenMethodReturnUint(token.interface.getSighash("balanceOf"), 0);
+        await mock4.givenMethodReturnUint(token.interface.getSighash("balanceOf"), 5);
 
         const BalanceAggregator = await hre.ethers.getContractFactory("BalanceAggregator");
         const balanceAggregator = await BalanceAggregator.deploy(token.address, [adapter1.address]);
 
-        return { BalanceAggregator, balanceAggregator, adapter1, adapter2, token, signers };
+        return { BalanceAggregator, balanceAggregator, adapter1, adapter2, adapter3, token, signers };
     })
 
     const [user1] = waffle.provider.getWallets();
@@ -150,9 +154,11 @@ describe("BalanceAggregator", async () => {
 
     describe("balanceOf()", async () => {
         it("returns the correct correct balance", async () => {
-            const { balanceAggregator, adapter1, adapter2, token} = await setup();
+            const { balanceAggregator, adapter1, adapter2, adapter3, token} = await setup();
             const expected = '0x09';
             await balanceAggregator.addAdapter(adapter2.address);
+            await balanceAggregator.addAdapter(adapter3.address);
+
             const balance = await balanceAggregator.balanceOf(user1.address);
             await expect(balance._hex).to.be.equals(expected);
         })
