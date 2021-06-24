@@ -1,22 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
+import "./interfaces/IAdapter.sol";
+import "./interfaces/IERC20.sol";
+
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-interface IAdapter {
-    function getBalance(address token, address account)
-        external
-        view
-        returns (uint256);
-}
-
-interface IERC20 {
-    function balanceOf(address _owner) external view returns (uint256 balance);
-}
-
 contract BalanceAggregator is Ownable {
-    event AddedAdapter(address owner);
-    event RemovedAdapter(address owner);
+    event AddedAdapter(address adapter);
+    event RemovedAdapter(address adapter);
 
     uint256 public adapterCount;
     IERC20 public token;
@@ -52,6 +44,7 @@ contract BalanceAggregator is Ownable {
             );
             adapters[currentAdapter] = adapter;
             currentAdapter = adapter;
+            emit AddedAdapter(adapter);
         }
         adapters[currentAdapter] = SENTINEL_ADAPTERS;
         adapterCount = _adapters.length;

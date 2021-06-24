@@ -1,14 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "../interfaces/IERC20.sol";
 
-interface IERC20 {
-    function balanceOf(address _owner) external view returns (uint256 balance);
-    function totalSupply() external view returns (uint256);
-}
-
-contract UniV2Adapter {
+contract LPBalanceAdapter {
     address public pair;
 
     constructor(address _pair) {
@@ -18,9 +13,9 @@ contract UniV2Adapter {
     function getBalance(address token, address account)
         public
         view
-        returns (uint256 balance)
+        returns (uint256)
     {
-        balance = (IERC20(token).balanceOf(pair) *
+        uint256 balance = (IERC20(token).balanceOf(pair) *
             IERC20(pair).balanceOf(account)) / IERC20(pair).totalSupply();
         return balance;
     }
