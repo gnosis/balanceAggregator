@@ -29,4 +29,14 @@ task("verifyEtherscan", "Verifies the contract on etherscan")
         })
     });
 
+    task("verifyLPBA", "Verifies an adapter contract on etherscan")
+        .addParam("contract", "Address of the balanceAggregator contract", undefined, types.string)
+        .addParam("pair", "Address of the token balance to aggregate", undefined, types.string)
+        .setAction(async (taskArgs, hardhatRuntime) => {
+            await hardhatRuntime.run("verify", {
+                address: taskArgs.contract,
+                constructorArgsParams: [taskArgs.pair]
+            })
+        });
+
 export { };
